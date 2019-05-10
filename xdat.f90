@@ -336,7 +336,6 @@ DO m=1, i-1
         END DO     
       END DO
     END DO
-    coordnum(n,k,k) = 0  ! remove self-coordination
   END DO
 
   ! write into filec
