@@ -16,7 +16,7 @@ PROGRAM  XDAT
 IMPLICIT  NONE
 
 INTEGER, PARAMETER :: ap = selected_real_kind(15,300)   
-INTEGER :: ntype,nr,maxatom,filein,i,k,m,IOstatus=0,p,q,j,n,s,t,bondtype
+INTEGER :: ntype,nr,maxatom,filein,fileout,i,k,m,IOstatus=0,p,q,j,n,s,t,bondtype
 REAL(ap), DIMENSION(:), ALLOCATABLE :: xarray, yarray, zarray, disp
 REAL(ap), DIMENSION(:,:), ALLOCATABLE :: xarrayimag,yarrayimag,zarrayimag
 REAL(ap), DIMENSION(:,:,:), ALLOCATABLE :: cutoff
@@ -204,8 +204,6 @@ IF(line=='y' .or. line=='yes') THEN
       WRITE(*,*) "Input the bond length and tolerance for: ",elemnm(k),"--",elemnm(m)
       READ(*,*) cutoff(k,m,:)   ! the correct tolerance should be the RMSD value
       IF(k.ne.m) cutoff(m,k,:)=cutoff(k,m,:)
-      WRITE(fnm,'(A2,A2,A4)') elemnm(k),elemnm(m),".dat"
-      OPEN(45+n,file=fnm, status='new')
     END DO
   END DO
 ELSE 
@@ -338,16 +336,28 @@ DO m=1, i-1
     END DO
   END DO
 
-  ! write into filec
+  ! write coordination into files, XxYy.dat only contains the number of Yy neighbours of Xx  
   n = 0   ! label bondtype
   DO k=1, ntype  
     DO j=k, ntype
-      n=n+1
-      WRITE(45+n,*) coordnum(:,k,j)
+      n=n+1;fileout=45+n
+      IF(m==1) THEN 
+        WRITE(fnm,'(A2,A2,A4)') elemnm(k),elemnm(j),".dat"
+        OPEN(fileout,file=fnm, status='new')
+      END IF
+      WRITE(fileout,*) coordnum(:,k,j)
+      IF(j.ne.k) THEN
+        n=n+1; fileout=45+n
+        IF(m==1) THEN
+          WRITE(fnm,'(A2,A2,A4)') elemnm(j),elemnm(k),".dat"
+          OPEN(fileout,file=fnm, status='new')
+        END IF
+        WRITE(fileout,*) coordnum(:,j,k)
+      END IF
     END DO
   END DO
 
-! end of loop of steps
+! end of loop of steps in .xyz file
 END DO
 
 DEALLOCATE(xarray)
