@@ -84,8 +84,7 @@ DO WHILE (IOstatus .eq. 0)
   alpha = ACOS((bvect(1)*cvect(1) + bvect(2)*cvect(2) + bvect(3)*cvect(3))/(b*c))
   beta = ACOS((avect(1)*cvect(1) + avect(2)*cvect(2) + avect(3)*cvect(3))/(a*c))
   gamma = ACOS((avect(1)*bvect(1) + avect(2)*bvect(2) + avect(3)*bvect(3))/(a*b))
-  vol = a*b*c*   & 
-      sqrt(1 - COS(alpha)*COS(alpha) - COS(beta)*COS(beta) - COS(gamma)*COS(gamma) - 2*COS(alpha)*COS(beta)*COS(gamma))
+  vol = dot_product(avect, cross(bvect,cvect))
 
   READ(filein,'(A255)') line
   ! subroutine to get element name and number of kinds of element
@@ -489,5 +488,45 @@ CONTAINS
     end if
     if ( present(err) ) err = ie
   END FUNCTION choose
+ ! calculate number of combinations by choosing k from n
+ FUNCTION choose(n, k, err)
+    integer :: choose
+    integer, intent(in) :: n, k
+    integer, optional, intent(out) :: err
+    integer :: imax, i, imin, ie
+    ie = 0
+    if ( (n < 0 ) .or. (k < 0 ) ) then
+       write(*, *) "negative in choose"
+       choose = 0
+       ie = 1
+    else
+       if ( n < k ) then
+          choose = 0
+       else if ( n == k ) then
+          choose = 1
+       else
+          imax = max(k, n-k)
+          imin = min(k, n-k)
+          choose = 1
+          do i = imax+1, n
+             choose = choose * i
+          end do
+          do i = 2, imin
+             choose = choose / i
+          end do
+       end if
+    end if
+    if ( present(err) ) err = ie
+  END FUNCTION choose
+  
+ ! cross product
+ FUNCTION cross(a, b)
+    REAL(ap), DIMENSION(3) :: cross
+    REAL(ap), DIMENSION(3), INTENT(IN) :: a, b
+
+    cross(1) = a(2) * b(3) - a(3) * b(2)
+    cross(2) = a(3) * b(1) - a(1) * b(3)
+    cross(3) = a(1) * b(2) - a(2) * b(1)
+ END FUNCTION cross
 
 END PROGRAM XDAT
